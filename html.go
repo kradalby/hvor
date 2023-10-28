@@ -2,12 +2,16 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	. "github.com/chasefleming/elem-go" //nolint
 	a "github.com/chasefleming/elem-go/attrs"
 )
 
-var dateFormat string = "Monday 02. January 2006"
+var (
+	dateFormat     string = "Monday 02. January 2006"
+	dateTimeFormat string = "Monday 02. January 2006 15:04"
+)
 
 func Base(props Attrs, children ...Node) *Element {
 	content := Html(Attrs{
@@ -42,7 +46,7 @@ func Base(props Attrs, children ...Node) *Element {
 	return content
 }
 
-func hvorPage(p *page, mapboxToken string) *Element {
+func hvorPage(p *page, mapboxToken string, lastFetch time.Time) *Element {
 	return Base(nil,
 		Div(
 			Attrs{
@@ -94,6 +98,11 @@ func hvorPage(p *page, mapboxToken string) *Element {
 					Div(nil, events(p.Past)...),
 				),
 			),
+			Footer(
+				Attrs{
+					a.Class: "px-4 py-6 text-sm text-gray-400",
+				},
+				Text(fmt.Sprintf("Last updated: %s", lastFetch.Format(dateTimeFormat)))),
 			Script(nil, Text(fmt.Sprintf(`
 console.log("derp")
 mapboxgl.accessToken = '%s';

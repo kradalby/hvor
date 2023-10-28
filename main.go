@@ -22,7 +22,7 @@ import (
 
 const (
 	defaultHostname = "hvor"
-	refreshPeriod   = 1 * time.Minute
+	refreshPeriod   = 30 * time.Minute
 )
 
 var (
@@ -292,6 +292,19 @@ type hvor struct {
 	logf        logger.Logf
 }
 
+func (h *hvor) updater() {
+	tick := time.Tick(refreshPeriod)
+
+	for {
+		<-tick
+
+		err := h.updateCalendar()
+		if err != nil {
+			h.logf("failed to update calendar data: %s", err)
+		}
+	}
+}
+
 func (h *hvor) updateCalendar() error {
 	cal, err := fetchCalendar(h.url)
 	if err != nil {
@@ -338,18 +351,10 @@ func (h *hvor) handler() http.Handler {
 			return
 		}
 
-		if time.Now().After(h.lastFetch.Add(refreshPeriod)) {
-			log.Printf("Calendar data might be outdated, updating...")
-			err := h.updateCalendar()
-			if err != nil {
-				log.Printf("Failed to fetch calendar: %s", err)
-			}
-		}
-
 		// TODO(kradalby): use from for metrics
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(hvorPage(h.calPage, h.mapboxToken).Render()))
+		w.Write([]byte(hvorPage(h.calPage, h.mapboxToken, h.lastFetch).Render()))
 	})
 }
 
@@ -380,14 +385,16 @@ func main() {
 		logf:        logger.Printf,
 	}
 
-	err := h.updateCalendar()
-	if err != nil {
+	if err := h.updateCalendar(); err != nil {
 		log.Fatalf("Failed to get initial calendar: %s", err)
 	}
 
 	if localClient := k.TailscaleLocalClient(); localClient != nil {
 		h.tsLocal = localClient
 	}
+
+	logger.Printf("starting background updater of calendar data, running every %s", refreshPeriod)
+	go h.updater()
 
 	staticFS := http.FS(staticAssets)
 	fs := http.FileServer(staticFS)
