@@ -16,6 +16,8 @@ import (
 
 	ics "github.com/arran4/golang-ical"
 	"github.com/kradalby/kraweb"
+	"tailscale.com/client/tailscale"
+	"tailscale.com/types/logger"
 )
 
 const (
@@ -286,6 +288,8 @@ type hvor struct {
 	lastFetch   time.Time
 	calPage     *page
 	mapboxToken string
+	tsLocal     *tailscale.LocalClient
+	logf        logger.Logf
 }
 
 func (h *hvor) updateCalendar() error {
@@ -305,10 +309,29 @@ func (h *hvor) updateCalendar() error {
 	return nil
 }
 
+func (h *hvor) isViaTailscale(r *http.Request) bool {
+	if h.tsLocal == nil {
+		h.logf("no tailscale client is available, connection not coming from tailscale")
+
+		return false
+	}
+
+	who, err := h.tsLocal.WhoIs(r.Context(), r.RemoteAddr)
+	if err != nil {
+		h.logf("failed to find out who connected with tailscale: %s", err)
+
+		return false
+	}
+
+	h.logf("tailscale who: %s", who.UserProfile.DisplayName)
+
+	return true
+}
+
 func (h *hvor) handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		from := r.URL.Query().Get("from")
-		if from == "" || !h.tokens.isValid(from) {
+		if !h.isViaTailscale(r) && !h.tokens.isValid(from) {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("Unauthorised, you probably do not have a direct link"))
 
@@ -354,11 +377,16 @@ func main() {
 		url:         *calendarURL,
 		tokens:      toks,
 		mapboxToken: *mapboxToken,
+		logf:        logger.Printf,
 	}
 
 	err := h.updateCalendar()
 	if err != nil {
 		log.Fatalf("Failed to get initial calendar: %s", err)
+	}
+
+	if localClient := k.TailscaleLocalClient(); localClient != nil {
+		h.tsLocal = localClient
 	}
 
 	staticFS := http.FS(staticAssets)

@@ -30,7 +30,7 @@
             ${pkgs.nodePackages.tailwindcss}/bin/tailwind --input ./input.css --output ./static/tailwind.css
           '';
 
-          vendorSha256 = "sha256-xebBWQODiRJA41ITqMsZwUfmm+lLV0/WErHmVfsirSg=";
+          vendorSha256 = "sha256-OFTJKtHh1zLjFu4OompTCmbm+IvLzDIJo4uvWy02MNg=";
         };
       };
     }
@@ -65,7 +65,7 @@
                     # echo "static/tailwind.css does not exist, creating..."
                     tailwind --input ./input.css --output ./static/tailwind.css
                 # fi
-                go run . --from-tokens "dev" --verbose --dev
+                go run . --from-tokens "dev" --verbose
               '')
             (writeShellScriptBin
               "hvordev"
