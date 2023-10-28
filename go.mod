@@ -1,6 +1,12 @@
 module github.com/kradalby/hvor
 
-go 1.20
+go 1.21.3
+
+require (
+	github.com/arran4/golang-ical v0.1.0
+	github.com/chasefleming/elem-go v0.8.0
+	github.com/kradalby/kraweb v0.0.0-20231028082137-9136d26d7cd0
+)
 
 require (
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -38,7 +44,6 @@ require (
 	github.com/jsimonetti/rtnetlink v1.3.2 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/kortschak/wol v0.0.0-20200729010619-da482cc4850a // indirect
-	github.com/kradalby/kraweb v0.0.0-20230709193422-b99bfffb4970 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mdlayher/genetlink v1.3.2 // indirect
 	github.com/mdlayher/netlink v1.7.2 // indirect
