@@ -5,7 +5,7 @@ go 1.21.3
 require (
 	github.com/arran4/golang-ical v0.1.0
 	github.com/chasefleming/elem-go v0.8.0
-	github.com/kradalby/kraweb v0.0.0-20231028185318-db679e171b2e
+	github.com/kradalby/kraweb v0.0.0-20231105084904-9575116f341f
 )
 
 require (
