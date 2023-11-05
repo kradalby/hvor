@@ -155,10 +155,10 @@ func event(pe pageEvent) *Element {
 		),
 		Div(
 			Attrs{
-				a.Class: "flex justify-end mt-4 text-gray-600",
+				a.Class: "flex justify-end flex-col md:flex-row mt-4 text-gray-600 text-right",
 			},
 			P(Attrs{a.Class: "text-sm"}, Text(pe.From.Format(dateFormat))),
-			P(Attrs{a.Class: "text-sm mx-1"}, Text("to")),
+			P(Attrs{a.Class: "text-sm md:mx-1"}, Text("to")),
 			P(Attrs{a.Class: "text-sm"}, Text(pe.To.Format(dateFormat))),
 		),
 	)
