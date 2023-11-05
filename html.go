@@ -32,10 +32,13 @@ func Base(props Attrs, children ...Node) *Element {
 			}),
 			Link(Attrs{
 				a.Rel:  "stylesheet",
-				a.Href: "https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css",
+				a.Href: "https://api.mapbox.com/mapbox-gl-js/v3.0.0-beta.1/mapbox-gl.css",
 			}),
 			Script(Attrs{
-				a.Src: "https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js",
+				a.Src: "https://api.mapbox.com/mapbox-gl-js/v3.0.0-beta.1/mapbox-gl.js",
+			}),
+			Script(Attrs{
+				a.Src: "https://unpkg.com/@turf/turf@6/turf.min.js",
 			}),
 		),
 		Body(props,
@@ -104,18 +107,32 @@ func hvorPage(p *page, mapboxToken string, lastFetch time.Time) *Element {
 				},
 				Text(fmt.Sprintf("Last updated: %s", lastFetch.Format(dateTimeFormat)))),
 			Script(nil, Text(fmt.Sprintf(`
-console.log("derp")
 mapboxgl.accessToken = '%s';
+
+let center = [%s, %s]
 const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/streets-v12',
-  center: [%s, %s],
+  center: center,
   scrollZoom: false,
-  zoom: 9
-});`,
+  zoom: 9,
+  minZoom: 9,
+});
+
+map.on('load', function() {
+  let radius = %f;
+  let options = {steps: 4, units: 'kilometers', properties: {}};
+  let circle = turf.circle(center, radius, options);
+  console.log(circle.geometry.coordinates);
+
+  map.fitBounds(new mapboxgl.LngLatBounds(circle.geometry.coordinates[0][0], circle.geometry.coordinates[0][2]), {padding: 50});
+})
+`,
 				mapboxToken,
 				p.Current.Location.Longitude,
-				p.Current.Location.Latitude))),
+				p.Current.Location.Latitude,
+				p.Current.Location.Radius/1000,
+			))),
 		),
 	)
 }
@@ -129,7 +146,7 @@ func event(pe pageEvent) *Element {
 			Attrs{
 				a.Class: "font-bold text-xl",
 			},
-			Text(pe.Location.Title)),
+			Text(pe.Summary)),
 		Div(
 			Attrs{a.Class: "text-gray-700 mt-1"},
 			TransformEach(pe.Description, func(s string) Node {
