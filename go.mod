@@ -6,6 +6,7 @@ require (
 	github.com/arran4/golang-ical v0.1.0
 	github.com/chasefleming/elem-go v0.8.0
 	github.com/kradalby/kraweb v0.0.0-20231105084904-9575116f341f
+	tailscale.com v1.42.0
 )
 
 require (
@@ -84,5 +85,4 @@ require (
 	gvisor.dev/gvisor v0.0.0-20230504175454-7b0a1988a28f // indirect
 	inet.af/peercred v0.0.0-20210906144145-0893ea02156a // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
-	tailscale.com v1.42.0 // indirect
 )

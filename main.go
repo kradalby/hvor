@@ -11,6 +11,7 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -139,7 +140,7 @@ func (u pageEvents) Less(i, j int) bool {
 type pageEvent struct {
 	From        time.Time
 	To          time.Time
-	Location    appleLocation
+	Location    *appleLocation
 	Summary     string
 	Description []string
 }
@@ -152,21 +153,28 @@ type page struct {
 
 type appleLocation struct {
 	Title        string
-	Radius       string
+	Radius       float64
 	Latitude     string
 	Longitude    string
 	MapkitHandle string
 }
 
-func getAppleLocation(event *ics.VEvent) appleLocation {
+func getAppleLocation(event *ics.VEvent) *appleLocation {
 	ret := appleLocation{}
 
 	comp := event.GetProperty(
 		ics.ComponentProperty("X-APPLE-STRUCTURED-LOCATION"),
 	)
+	if comp == nil {
+		return nil
+	}
 
 	ret.Title = sanitiseLocationTitle(comp.ICalParameters["X-TITLE"][0])
-	ret.Radius = comp.ICalParameters["X-APPLE-RADIUS"][0]
+
+	if radius, err := strconv.ParseFloat(comp.ICalParameters["X-APPLE-RADIUS"][0], 64); err == nil {
+		ret.Radius = radius
+	}
+
 	ret.MapkitHandle = comp.ICalParameters["X-APPLE-MAPKIT-HANDLE"][0]
 
 	if coordString, found := strings.CutPrefix(comp.Value, "geo:"); found {
@@ -178,7 +186,7 @@ func getAppleLocation(event *ics.VEvent) appleLocation {
 		}
 	}
 
-	return ret
+	return &ret
 }
 
 func sanitiseLocationTitle(title string) string {
@@ -199,6 +207,10 @@ func sanitiseLocationTitle(title string) string {
 	}
 
 	return strings.ReplaceAll(title, "\\n", ", ")
+}
+
+func sanatiseCalText(str string) string {
+	return strings.ReplaceAll(str, "\\,", ",")
 }
 
 func sanitiseDescription(desc string) []string {
@@ -231,12 +243,12 @@ func createPage(cal *ics.Calendar) (*page, error) {
 			From:        from,
 			To:          to,
 			Location:    getAppleLocation(event),
-			Summary:     summary.Value,
+			Summary:     sanatiseCalText(summary.Value),
 			Description: []string{},
 		}
 
 		if desc != nil {
-			pe.Description = sanitiseDescription(desc.Value)
+			pe.Description = sanitiseDescription(sanatiseCalText(desc.Value))
 		}
 
 		if to.Before(now) {
