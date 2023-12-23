@@ -40,6 +40,11 @@ func Base(props Attrs, children ...Node) *Element {
 			Script(Attrs{
 				a.Src: "https://unpkg.com/@turf/turf@6/turf.min.js",
 			}),
+			Script(Attrs{
+				a.Src:             "https://umami.kradalby.no/script.js",
+				a.Async:           "true",
+				"data-website-id": "0de65a1e-5275-4e39-a78e-364e704c0867",
+			}),
 		),
 		Body(props,
 			children...,
