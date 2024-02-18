@@ -370,6 +370,53 @@ func (h *hvor) handler() http.Handler {
 	})
 }
 
+func pager(w http.ResponseWriter, r *http.Request) (int, int, error) {
+	fromStr := r.URL.Query().Get("from")
+
+	from, err := strconv.Atoi(fromStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid from"))
+	}
+
+	toStr := r.URL.Query().Get("to")
+	to, err := strconv.Atoi(toStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid to"))
+	}
+
+	return from, to, err
+}
+
+func (h *hvor) future() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		from, to, err := pager(w, r)
+		if err != nil {
+			return
+		}
+
+		evs := events(h.calPage.Future, "future", from, to)
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(renderNodeList(evs)))
+	})
+}
+
+func (h *hvor) past() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		from, to, err := pager(w, r)
+		if err != nil {
+			return
+		}
+
+		evs := events(h.calPage.Past, "past", from, to)
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(renderNodeList(evs)))
+	})
+}
+
 //go:embed all:static
 var staticAssets embed.FS
 
@@ -413,6 +460,8 @@ func main() {
 	k.Handle("/static/", fs)
 
 	k.Handle("/", h.handler())
+	k.Handle("/future", h.future())
+	k.Handle("/past", h.past())
 
 	log.Fatalf("Failed to serve %s", k.ListenAndServe())
 }

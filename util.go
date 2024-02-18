@@ -3,6 +3,9 @@ package main
 import (
 	"os"
 	"strconv"
+	"strings"
+
+	"github.com/chasefleming/elem-go"
 )
 
 // A handy map of US state codes to full names.
@@ -94,4 +97,14 @@ func getEnvInt(key string, fallback int) int {
 	}
 
 	return fallback
+}
+
+func renderNodeList(nodes []elem.Node) string {
+	var sb strings.Builder
+
+	for _, node := range nodes {
+		sb.WriteString(node.Render())
+	}
+
+	return sb.String()
 }
