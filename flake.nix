@@ -21,17 +21,18 @@
       overlay = _: prev: let
         pkgs = nixpkgs.legacyPackages.${prev.system};
       in {
-        hvor = pkgs.buildGoModule {
-          pname = "hvor";
-          version = hvorVersion;
-          src = pkgs.nix-gitignore.gitignoreSource [] ./.;
+        hvor = pkgs.callPackage ({buildGoModule}:
+          buildGoModule {
+            pname = "hvor";
+            version = hvorVersion;
+            src = pkgs.nix-gitignore.gitignoreSource [] ./.;
 
-          patchPhase = ''
-            ${pkgs.nodePackages.tailwindcss}/bin/tailwind --input ./input.css --output ./static/tailwind.css
-          '';
+            patchPhase = ''
+              ${pkgs.nodePackages.tailwindcss}/bin/tailwind --input ./input.css --output ./static/tailwind.css
+            '';
 
-          vendorHash = "sha256-E/G3dfmKt9u3LsSU4OsOGiiQyAZLb9UhvC+hrX5BDTQ=";
-        };
+            vendorHash = "sha256-E/G3dfmKt9u3LsSU4OsOGiiQyAZLb9UhvC+hrX5BDTQ=";
+          }) {};
       };
     }
     // utils.lib.eachDefaultSystem
