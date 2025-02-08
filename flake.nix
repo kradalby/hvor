@@ -28,7 +28,7 @@
             src = pkgs.nix-gitignore.gitignoreSource [] ./.;
 
             patchPhase = ''
-              ${pkgs.nodePackages.tailwindcss}/bin/tailwind --input ./input.css --output ./static/tailwind.css
+              ${pkgs.nodePackages.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
             '';
 
             vendorHash = "sha256-E/G3dfmKt9u3LsSU4OsOGiiQyAZLb9UhvC+hrX5BDTQ=";
@@ -64,7 +64,7 @@
                 # if [ ! -f ./static/tailwind.css ]
                 # then
                     # echo "static/tailwind.css does not exist, creating..."
-                    tailwind --input ./input.css --output ./static/tailwind.css
+                    tailwindcss --input ./input.css --output ./static/tailwind.css
                 # fi
                 go run . --from-tokens "dev" --verbose
               '')
