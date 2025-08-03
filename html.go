@@ -57,6 +57,56 @@ func Base(props a.Props, children ...Node) *Element {
 }
 
 func hvorPage(p *page, mapboxToken string, lastFetch time.Time) *Element {
+	var mapElement, mapScript *Element
+	
+	if p.Current.Location != nil {
+		mapElement = Div(a.Props{
+			a.ID:    "map",
+			a.Class: "mt-4 h-72",
+		})
+		
+		mapScript = Script(nil, Text(fmt.Sprintf(`
+mapboxgl.accessToken = '%s';
+
+let center = [%s, %s]
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/streets-v12',
+  center: center,
+  scrollZoom: false,
+  zoom: 9,
+  minZoom: 9,
+});
+
+map.on('load', function() {
+  let radius = %f;
+  let options = {steps: 4, units: 'kilometers', properties: {}};
+  let circle = turf.circle(center, radius, options);
+  console.log(circle.geometry.coordinates);
+
+  map.fitBounds(new mapboxgl.LngLatBounds(circle.geometry.coordinates[0][0], circle.geometry.coordinates[0][2]), {padding: 50});
+})
+`,
+			mapboxToken,
+			p.Current.Location.Longitude,
+			p.Current.Location.Latitude,
+			p.Current.Location.Radius/1000,
+		)))
+	} else {
+		mapElement = Div(
+			a.Props{
+				a.Class: "mt-4 h-72 bg-gray-100 rounded-lg flex items-center justify-center",
+			},
+			P(
+				a.Props{
+					a.Class: "text-gray-500 text-lg",
+				},
+				Text("Unknown whereabouts"),
+			),
+		)
+		mapScript = nil
+	}
+	
 	return Base(nil,
 		Div(
 			a.Props{
@@ -87,10 +137,7 @@ func hvorPage(p *page, mapboxToken string, lastFetch time.Time) *Element {
 				a.Props{
 					a.Class: "px-4 py-6",
 				},
-				Div(a.Props{
-					a.ID:    "map",
-					a.Class: "mt-4 h-72",
-				}),
+				mapElement,
 				event(p.Current),
 				Div(nil,
 					H2(
@@ -113,33 +160,7 @@ func hvorPage(p *page, mapboxToken string, lastFetch time.Time) *Element {
 					a.Class: "px-4 py-6 text-sm text-gray-400",
 				},
 				Text(fmt.Sprintf("Last updated: %s", lastFetch.Format(dateTimeFormat)))),
-			Script(nil, Text(fmt.Sprintf(`
-mapboxgl.accessToken = '%s';
-
-let center = [%s, %s]
-const map = new mapboxgl.Map({
-  container: 'map',
-  style: 'mapbox://styles/mapbox/streets-v12',
-  center: center,
-  scrollZoom: false,
-  zoom: 9,
-  minZoom: 9,
-});
-
-map.on('load', function() {
-  let radius = %f;
-  let options = {steps: 4, units: 'kilometers', properties: {}};
-  let circle = turf.circle(center, radius, options);
-  console.log(circle.geometry.coordinates);
-
-  map.fitBounds(new mapboxgl.LngLatBounds(circle.geometry.coordinates[0][0], circle.geometry.coordinates[0][2]), {padding: 50});
-})
-`,
-				mapboxToken,
-				p.Current.Location.Longitude,
-				p.Current.Location.Latitude,
-				p.Current.Location.Radius/1000,
-			))),
+			mapScript,
 		),
 	)
 }
