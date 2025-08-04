@@ -169,13 +169,19 @@ func getAppleLocation(event *ics.VEvent) *appleLocation {
 		return nil
 	}
 
-	ret.Title = sanitiseLocationTitle(comp.ICalParameters["X-TITLE"][0])
-
-	if radius, err := strconv.ParseFloat(comp.ICalParameters["X-APPLE-RADIUS"][0], 64); err == nil {
-		ret.Radius = radius
+	if titles, ok := comp.ICalParameters["X-TITLE"]; ok && len(titles) > 0 {
+		ret.Title = sanitiseLocationTitle(titles[0])
 	}
 
-	ret.MapkitHandle = comp.ICalParameters["X-APPLE-MAPKIT-HANDLE"][0]
+	if radiusParams, ok := comp.ICalParameters["X-APPLE-RADIUS"]; ok && len(radiusParams) > 0 {
+		if radius, err := strconv.ParseFloat(radiusParams[0], 64); err == nil {
+			ret.Radius = radius
+		}
+	}
+
+	if handles, ok := comp.ICalParameters["X-APPLE-MAPKIT-HANDLE"]; ok && len(handles) > 0 {
+		ret.MapkitHandle = handles[0]
+	}
 
 	if coordString, found := strings.CutPrefix(comp.Value, "geo:"); found {
 		coord := strings.Split(coordString, ",")
@@ -192,10 +198,12 @@ func getAppleLocation(event *ics.VEvent) *appleLocation {
 func sanitiseLocationTitle(title string) string {
 	usMatch := reUnitedStates.FindStringSubmatch(title)
 
-	if len(usMatch) > 0 {
+	if len(usMatch) > 2 {
 		// Replace state two-letter code with
 		// full name.
-		usMatch[2] = usc[usMatch[2]]
+		if stateName, ok := usc[usMatch[2]]; ok {
+			usMatch[2] = stateName
+		}
 
 		return strings.Join(usMatch[1:], ", ")
 	}
@@ -348,7 +356,11 @@ func (h *hvor) isViaTailscale(r *http.Request) bool {
 		return false
 	}
 
-	h.logf("tailscale who: %s", who.UserProfile.DisplayName)
+	displayName := "Unknown User"
+	if who.UserProfile != nil {
+		displayName = who.UserProfile.DisplayName
+	}
+	h.logf("tailscale who: %s", displayName)
 
 	return true
 }
