@@ -14,7 +14,7 @@ var (
 	dateTimeFormat string = "Monday 02. January 2006 15:04"
 )
 
-func Base(props a.Props, children ...Node) *Element {
+func BasePage(props a.Props, children ...Node) *Element {
 	content := Html(a.Props{
 		a.Lang: "en",
 	},
@@ -107,7 +107,7 @@ map.on('load', function() {
 		mapScript = nil
 	}
 	
-	return Base(nil,
+	return BasePage(nil,
 		Div(
 			a.Props{
 				a.Class: "w-full md:w-2/3 lg:w-1/2 mx-auto",

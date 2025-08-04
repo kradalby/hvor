@@ -31,7 +31,7 @@
               ${pkgs.nodePackages.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
             '';
 
-            vendorHash = "sha256-E/G3dfmKt9u3LsSU4OsOGiiQyAZLb9UhvC+hrX5BDTQ=";
+            vendorHash = "sha256-UlITUR+Hhv5K6pe/HpMcBR25tU+30mjzaVlCdi9zONg=";
           }) {};
       };
     }
