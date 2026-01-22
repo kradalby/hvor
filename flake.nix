@@ -18,17 +18,15 @@
       else "dev";
   in
     {
-      overlay = _: prev: let
-        pkgs = nixpkgs.legacyPackages.${prev.system};
-      in {
-        hvor = pkgs.callPackage ({buildGoModule}:
+      overlay = _: prev: {
+        hvor = prev.callPackage ({buildGoModule}:
           buildGoModule {
             pname = "hvor";
             version = hvorVersion;
-            src = pkgs.nix-gitignore.gitignoreSource [] ./.;
+            src = prev.nix-gitignore.gitignoreSource [] ./.;
 
             patchPhase = ''
-              ${pkgs.nodePackages.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
+              ${prev.nodePackages.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
             '';
 
             vendorHash = "sha256-UlITUR+Hhv5K6pe/HpMcBR25tU+30mjzaVlCdi9zONg=";
