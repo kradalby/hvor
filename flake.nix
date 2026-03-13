@@ -18,15 +18,17 @@
       else "dev";
   in
     {
-      overlay = _: prev: {
-        hvor = prev.callPackage ({buildGoModule}:
+      overlays.default = _: prev: let
+        pkgs = nixpkgs.legacyPackages.${prev.stdenv.hostPlatform.system};
+      in {
+        hvor = pkgs.callPackage ({buildGoModule}:
           buildGoModule {
             pname = "hvor";
             version = hvorVersion;
-            src = prev.nix-gitignore.gitignoreSource [] ./.;
+            src = pkgs.nix-gitignore.gitignoreSource [] ./.;
 
             patchPhase = ''
-              ${prev.nodePackages.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
+              ${pkgs.nodePackages.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
             '';
 
             vendorHash = "sha256-UlITUR+Hhv5K6pe/HpMcBR25tU+30mjzaVlCdi9zONg=";
@@ -36,7 +38,7 @@
     // utils.lib.eachDefaultSystem
     (system: let
       pkgs = import nixpkgs {
-        overlays = [self.overlay];
+        overlays = [self.overlays.default];
         inherit system;
       };
       buildDeps = with pkgs; [
@@ -51,19 +53,15 @@
           entr
           nodePackages.tailwindcss
         ];
-    in rec {
+    in {
       # `nix develop`
-      devShell = pkgs.mkShell {
+      devShells.default = pkgs.mkShell {
         buildInputs = with pkgs;
           [
             (writeShellScriptBin
               "hvorrun"
               ''
-                # if [ ! -f ./static/tailwind.css ]
-                # then
-                    # echo "static/tailwind.css does not exist, creating..."
-                    tailwindcss --input ./input.css --output ./static/tailwind.css
-                # fi
+                tailwindcss --input ./input.css --output ./static/tailwind.css
                 go run . --from-tokens "dev" --verbose
               '')
             (writeShellScriptBin
@@ -78,23 +76,20 @@
       # `nix build`
       packages = with pkgs; {
         inherit hvor;
+        default = hvor;
       };
-
-      defaultPackage = pkgs.hvor;
 
       # `nix run`
       apps = {
         hvor = utils.lib.mkApp {
-          drv = packages.hvor;
+          drv = pkgs.hvor;
+        };
+        default = utils.lib.mkApp {
+          drv = pkgs.hvor;
         };
       };
-
-      defaultApp = apps.hvor;
-
-      overlays.default = self.overlay;
     })
     // {
-      # TODO(kradalby): Finish the module
       nixosModules.default = {
         pkgs,
         lib,
@@ -165,10 +160,11 @@
                 ]
                 ++ lib.optionals cfg.verbose ["--verbose"];
             in ''
-              ${cfg.package}/bin/hvor ${builtins.concatStringsSep " " args}
+              ${cfg.package}/bin/hvor ${lib.concatStringsSep " " args}
             '';
             wantedBy = ["multi-user.target"];
             after = ["network-online.target"];
+            wants = ["network-online.target"];
             serviceConfig = {
               User = cfg.user;
               Group = cfg.group;

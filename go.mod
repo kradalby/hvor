@@ -1,6 +1,6 @@
 module github.com/kradalby/hvor
 
-go 1.24.4
+go 1.25
 
 require (
 	github.com/arran4/golang-ical v0.3.2
