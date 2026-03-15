@@ -21,8 +21,8 @@
       overlays.default = _: prev: let
         pkgs = nixpkgs.legacyPackages.${prev.stdenv.hostPlatform.system};
       in {
-        hvor = pkgs.callPackage ({buildGoModule}:
-          buildGoModule {
+        hvor = pkgs.callPackage ({buildGo126Module}:
+          buildGo126Module {
             pname = "hvor";
             version = hvorVersion;
             src = pkgs.nix-gitignore.gitignoreSource [] ./.;
@@ -31,7 +31,7 @@
               ${pkgs.nodePackages.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
             '';
 
-            vendorHash = "sha256-UlITUR+Hhv5K6pe/HpMcBR25tU+30mjzaVlCdi9zONg=";
+            vendorHash = "sha256-+Kf1Cm3KYlR5tLUYR1lW0opeThbLF9FpNSU0spCWt2g=";
           }) {};
       };
     }
@@ -44,7 +44,7 @@
       buildDeps = with pkgs; [
         git
         gnumake
-        go
+        go_1_26
       ];
       devDeps = with pkgs;
         buildDeps
