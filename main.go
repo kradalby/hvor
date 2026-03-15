@@ -94,6 +94,8 @@ var (
 	)
 )
 
+var httpClient = &http.Client{Timeout: 30 * time.Second}
+
 func fetchCalendar(url string) (*ics.Calendar, error) {
 	var body []byte
 	var err error
@@ -104,9 +106,14 @@ func fetchCalendar(url string) (*ics.Calendar, error) {
 			return nil, fmt.Errorf("failed to read cal from disk: %w", err)
 		}
 	} else {
-		resp, err := http.Get(url)
+		resp, err := httpClient.Get(url)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get calendar: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("calendar fetch returned status %d", resp.StatusCode)
 		}
 
 		body, err = io.ReadAll(resp.Body)
@@ -247,11 +254,16 @@ func createPage(cal *ics.Calendar) (*page, error) {
 		summary := event.GetProperty(ics.ComponentPropertySummary)
 		desc := event.GetProperty(ics.ComponentPropertyDescription)
 
+		var summaryText string
+		if summary != nil {
+			summaryText = sanatiseCalText(summary.Value)
+		}
+
 		pe := pageEvent{
 			From:        from,
 			To:          to,
 			Location:    getAppleLocation(event),
-			Summary:     sanatiseCalText(summary.Value),
+			Summary:     summaryText,
 			Description: []string{},
 		}
 
@@ -285,6 +297,10 @@ type tokens struct {
 }
 
 func parseTokens(str string) tokens {
+	if str == "" {
+		return tokens{}
+	}
+
 	list := strings.Split(str, ",")
 
 	return tokens{
@@ -389,16 +405,21 @@ func pager(w http.ResponseWriter, r *http.Request) (int, int, error) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid from"))
+
+		return 0, 0, fmt.Errorf("invalid from: %w", err)
 	}
 
 	toStr := r.URL.Query().Get("to")
+
 	to, err := strconv.Atoi(toStr)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid to"))
+
+		return 0, 0, fmt.Errorf("invalid to: %w", err)
 	}
 
-	return from, to, err
+	return from, to, nil
 }
 
 func (h *hvor) future() http.Handler {
