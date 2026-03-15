@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	ics "github.com/arran4/golang-ical"
@@ -153,7 +154,7 @@ type pageEvent struct {
 }
 
 type page struct {
-	Current pageEvent
+	Current *pageEvent
 	Past    pageEvents
 	Future  pageEvents
 }
@@ -192,8 +193,8 @@ func getAppleLocation(event *ics.VEvent) *appleLocation {
 
 	if coordString, found := strings.CutPrefix(comp.Value, "geo:"); found {
 		coord := strings.Split(coordString, ",")
-		// TODO: Check if this is the right lat long order
 		if len(coord) == 2 {
+			// TODO: Check if this is the right lat long order
 			ret.Latitude = coord[0]
 			ret.Longitude = coord[1]
 		}
@@ -232,8 +233,10 @@ func sanitiseDescription(desc string) []string {
 	return strings.Split(desc, "\\n")
 }
 
-func createPage(cal *ics.Calendar) (*page, error) {
+func createPage(cal *ics.Calendar, logf logger.Logf) (*page, error) {
 	now := time.Now()
+	pastCutoff := now.AddDate(0, -*monthsPast, 0)
+	futureCutoff := now.AddDate(0, *monthsFuture, 0)
 
 	p := page{
 		Past:   make(pageEvents, 0),
@@ -243,12 +246,16 @@ func createPage(cal *ics.Calendar) (*page, error) {
 	for _, event := range cal.Events() {
 		from, err := event.GetAllDayStartAt()
 		if err != nil {
-			return nil, err
+			logf("skipping event (bad start date): %s", err)
+
+			continue
 		}
 
 		to, err := event.GetAllDayEndAt()
 		if err != nil {
-			return nil, err
+			logf("skipping event (bad end date): %s", err)
+
+			continue
 		}
 
 		summary := event.GetProperty(ics.ComponentPropertySummary)
@@ -272,18 +279,22 @@ func createPage(cal *ics.Calendar) (*page, error) {
 		}
 
 		if to.Before(now) {
-			p.Past = append(p.Past, pe)
+			if to.After(pastCutoff) {
+				p.Past = append(p.Past, pe)
+			}
 
 			continue
 		}
 
 		if from.After(now) {
-			p.Future = append(p.Future, pe)
+			if from.Before(futureCutoff) {
+				p.Future = append(p.Future, pe)
+			}
 
 			continue
 		}
 
-		p.Current = pe
+		p.Current = &pe
 	}
 
 	sort.Sort(sort.Reverse(p.Past))
@@ -318,11 +329,16 @@ func (t *tokens) isValid(token string) bool {
 	return false
 }
 
+// snapshot bundles the calendar page and fetch time for atomic swapping.
+type snapshot struct {
+	calPage   *page
+	lastFetch time.Time
+}
+
 type hvor struct {
 	url         string
 	tokens      tokens
-	lastFetch   time.Time
-	calPage     *page
+	snap        atomic.Pointer[snapshot]
 	mapboxToken string
 	tsLocal     *tailscale.LocalClient
 	logf        logger.Logf
@@ -347,13 +363,12 @@ func (h *hvor) updateCalendar() error {
 		return err
 	}
 
-	p, err := createPage(cal)
+	p, err := createPage(cal, h.logf)
 	if err != nil {
 		return err
 	}
 
-	h.calPage = p
-	h.lastFetch = time.Now()
+	h.snap.Store(&snapshot{calPage: p, lastFetch: time.Now()})
 
 	return nil
 }
@@ -393,8 +408,9 @@ func (h *hvor) handler() http.Handler {
 
 		// TODO(kradalby): use from for metrics
 
+		s := h.snap.Load()
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(hvorPage(h.calPage, h.mapboxToken, h.lastFetch).Render()))
+		w.Write([]byte(hvorPage(s.calPage, h.mapboxToken, s.lastFetch).Render()))
 	})
 }
 
@@ -429,7 +445,8 @@ func (h *hvor) future() http.Handler {
 			return
 		}
 
-		evs := events(h.calPage.Future, "future", from, to)
+		s := h.snap.Load()
+		evs := events(s.calPage.Future, "future", from, to)
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(renderNodeList(evs)))
@@ -443,7 +460,8 @@ func (h *hvor) past() http.Handler {
 			return
 		}
 
-		evs := events(h.calPage.Past, "past", from, to)
+		s := h.snap.Load()
+		evs := events(s.calPage.Past, "past", from, to)
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(renderNodeList(evs)))
