@@ -59,7 +59,7 @@ func BasePage(props a.Props, children ...Node) *Element {
 func hvorPage(p *page, mapboxToken string, lastFetch time.Time) *Element {
 	var mapElement, mapScript *Element
 
-	if p.Current.Location != nil {
+	if p.Current != nil && p.Current.Location != nil {
 		mapElement = Div(a.Props{
 			a.ID:    "map",
 			a.Class: "mt-4 h-72",
@@ -138,7 +138,7 @@ map.on('load', function() {
 					a.Class: "px-4 py-6",
 				},
 				mapElement,
-				event(p.Current),
+				currentEvent(p.Current),
 				Div(nil,
 					H2(
 						a.Props{
@@ -163,6 +163,14 @@ map.on('load', function() {
 			mapScript,
 		),
 	)
+}
+
+func currentEvent(pe *pageEvent) Node {
+	if pe == nil {
+		return None()
+	}
+
+	return event(*pe)
 }
 
 func event(pe pageEvent) *Element {
