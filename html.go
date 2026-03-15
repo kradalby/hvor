@@ -58,13 +58,13 @@ func BasePage(props a.Props, children ...Node) *Element {
 
 func hvorPage(p *page, mapboxToken string, lastFetch time.Time) *Element {
 	var mapElement, mapScript *Element
-	
+
 	if p.Current.Location != nil {
 		mapElement = Div(a.Props{
 			a.ID:    "map",
 			a.Class: "mt-4 h-72",
 		})
-		
+
 		mapScript = Script(nil, Text(fmt.Sprintf(`
 mapboxgl.accessToken = '%s';
 
@@ -106,7 +106,7 @@ map.on('load', function() {
 		)
 		mapScript = nil
 	}
-	
+
 	return BasePage(nil,
 		Div(
 			a.Props{
@@ -193,11 +193,19 @@ func event(pe pageEvent) *Element {
 }
 
 func events(es pageEvents, typ string, from, to int) []Node {
+	if from < 0 {
+		from = 0
+	}
+
 	if to > len(es) {
 		to = len(es)
 	}
 
-	events := TransformEach(es, func(pe pageEvent) Node {
+	if from > to {
+		from = to
+	}
+
+	events := TransformEach(es[from:to], func(pe pageEvent) Node {
 		return event(pe)
 	})
 
@@ -209,5 +217,5 @@ func events(es pageEvents, typ string, from, to int) []Node {
 		a.Class:    "italic text-blue-400 underline",
 	}, Text("load more...")), None())
 
-	return append(events[from:to], more)
+	return append(events, more)
 }
