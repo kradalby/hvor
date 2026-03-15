@@ -26,6 +26,10 @@ func BasePage(props a.Props, children ...Node) *Element {
 				a.Name:    "viewport",
 				a.Content: "initial-scale=1,maximum-scale=1,user-scalable=no",
 			}),
+			Meta(a.Props{
+				a.Name:    "referrer",
+				a.Content: "no-referrer",
+			}),
 			Title(nil, Text("hvor")),
 			Link(a.Props{
 				a.Rel:  "stylesheet",
