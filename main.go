@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"flag"
 	"fmt"
@@ -9,11 +10,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"sync/atomic"
+	"syscall"
 	"time"
 
 	ics "github.com/arran4/golang-ical"
@@ -194,9 +197,13 @@ func getAppleLocation(event *ics.VEvent) *appleLocation {
 	if coordString, found := strings.CutPrefix(comp.Value, "geo:"); found {
 		coord := strings.Split(coordString, ",")
 		if len(coord) == 2 {
-			// TODO: Check if this is the right lat long order
-			ret.Latitude = coord[0]
-			ret.Longitude = coord[1]
+			if _, err := strconv.ParseFloat(coord[0], 64); err == nil {
+				ret.Latitude = coord[0]
+			}
+
+			if _, err := strconv.ParseFloat(coord[1], 64); err == nil {
+				ret.Longitude = coord[1]
+			}
 		}
 	}
 
@@ -225,7 +232,7 @@ func sanitiseLocationTitle(title string) string {
 	return strings.ReplaceAll(title, "\\n", ", ")
 }
 
-func sanatiseCalText(str string) string {
+func sanitiseCalText(str string) string {
 	return strings.ReplaceAll(str, "\\,", ",")
 }
 
@@ -263,7 +270,7 @@ func createPage(cal *ics.Calendar, logf logger.Logf) (*page, error) {
 
 		var summaryText string
 		if summary != nil {
-			summaryText = sanatiseCalText(summary.Value)
+			summaryText = sanitiseCalText(summary.Value)
 		}
 
 		pe := pageEvent{
@@ -275,7 +282,7 @@ func createPage(cal *ics.Calendar, logf logger.Logf) (*page, error) {
 		}
 
 		if desc != nil {
-			pe.Description = sanitiseDescription(sanatiseCalText(desc.Value))
+			pe.Description = sanitiseDescription(sanitiseCalText(desc.Value))
 		}
 
 		if to.Before(now) {
@@ -344,15 +351,18 @@ type hvor struct {
 	logf        logger.Logf
 }
 
-func (h *hvor) updater() {
-	tick := time.Tick(refreshPeriod)
+func (h *hvor) updater(ctx context.Context) {
+	ticker := time.NewTicker(refreshPeriod)
+	defer ticker.Stop()
 
 	for {
-		<-tick
-
-		err := h.updateCalendar()
-		if err != nil {
-			h.logf("failed to update calendar data: %s", err)
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := h.updateCalendar(); err != nil {
+				h.logf("failed to update calendar data: %s", err)
+			}
 		}
 	}
 }
@@ -503,8 +513,12 @@ func main() {
 		h.tsLocal = localClient
 	}
 
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
 	logger.Printf("starting background updater of calendar data, running every %s", refreshPeriod)
-	go h.updater()
+
+	go h.updater(ctx)
 
 	staticFS := http.FS(staticAssets)
 	fs := http.FileServer(staticFS)
