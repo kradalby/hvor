@@ -28,7 +28,7 @@
             src = pkgs.nix-gitignore.gitignoreSource [] ./.;
 
             patchPhase = ''
-              ${pkgs.nodePackages.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
+              ${pkgs.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
             '';
 
             vendorHash = "sha256-+Kf1Cm3KYlR5tLUYR1lW0opeThbLF9FpNSU0spCWt2g=";
@@ -51,7 +51,7 @@
         ++ [
           golangci-lint
           entr
-          nodePackages.tailwindcss
+          tailwindcss
         ];
     in {
       # `nix develop`
