@@ -20,7 +20,7 @@ import (
 	"time"
 
 	ics "github.com/arran4/golang-ical"
-	"github.com/kradalby/kraweb"
+	"github.com/kradalby/kra/web"
 	"tailscale.com/client/tailscale"
 	"tailscale.com/types/logger"
 )
@@ -488,15 +488,19 @@ func main() {
 
 	logger := log.New(os.Stdout, "hvor: ", log.LstdFlags)
 
-	k := kraweb.NewKraWeb(
-		*hostname,
-		*tailscaleKeyPath,
-		*controlURL,
-		*verbose,
-		*localAddr,
-		logger,
-		!*dev,
+	k, err := web.NewServer(web.ServerConfig{
+		Hostname:        *hostname,
+		LocalAddr:       *localAddr,
+		AuthKeyPath:     *tailscaleKeyPath,
+		EnableTailscale: !*dev,
+	},
+		web.WithControlURL(*controlURL),
+		web.WithVerbose(*verbose),
+		web.WithStdLogger(logger),
 	)
+	if err != nil {
+		log.Fatalf("kraweb: %s", err)
+	}
 
 	h := hvor{
 		url:         *calendarURL,
@@ -528,5 +532,5 @@ func main() {
 	k.Handle("/future", h.future())
 	k.Handle("/past", h.past())
 
-	log.Fatalf("Failed to serve %s", k.ListenAndServe())
+	log.Fatalf("Failed to serve %s", k.ListenAndServe(ctx))
 }
