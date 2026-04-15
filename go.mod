@@ -3,7 +3,7 @@ module github.com/kradalby/hvor
 go 1.26.1
 
 require (
-	github.com/arran4/golang-ical v0.3.4
+	github.com/arran4/golang-ical v0.3.5
 	github.com/chasefleming/elem-go v0.31.0
 	github.com/kradalby/kra v0.0.0-20260415203542-6e0cd423be1d
 	tailscale.com v1.96.5
