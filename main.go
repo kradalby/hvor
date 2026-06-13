@@ -21,7 +21,7 @@ import (
 
 	ics "github.com/arran4/golang-ical"
 	"github.com/kradalby/kra/web"
-	"tailscale.com/client/tailscale"
+	"tailscale.com/client/tailscale" //nolint:staticcheck // SA1019: deprecated, pending migration to client/tailscale/v2
 	"tailscale.com/types/logger"
 )
 
@@ -114,7 +114,7 @@ func fetchCalendar(url string) (*ics.Calendar, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get calendar: %w", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
 			return nil, fmt.Errorf("calendar fetch returned status %d", resp.StatusCode)
@@ -347,7 +347,7 @@ type hvor struct {
 	tokens      tokens
 	snap        atomic.Pointer[snapshot]
 	mapboxToken string
-	tsLocal     *tailscale.LocalClient
+	tsLocal     *tailscale.LocalClient //nolint:staticcheck // SA1019: deprecated, pending migration to client/tailscale/v2
 	logf        logger.Logf
 }
 
@@ -411,7 +411,7 @@ func (h *hvor) handler() http.Handler {
 		from := r.URL.Query().Get("from")
 		if !h.isViaTailscale(r) && !h.tokens.isValid(from) {
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Unauthorised, you probably do not have a direct link"))
+			_, _ = w.Write([]byte("Unauthorised, you probably do not have a direct link"))
 
 			return
 		}
@@ -420,7 +420,7 @@ func (h *hvor) handler() http.Handler {
 
 		s := h.snap.Load()
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(hvorPage(s.calPage, h.mapboxToken, s.lastFetch).Render()))
+		_, _ = w.Write([]byte(hvorPage(s.calPage, h.mapboxToken, s.lastFetch).Render()))
 	})
 }
 
@@ -430,7 +430,7 @@ func pager(w http.ResponseWriter, r *http.Request) (int, int, error) {
 	from, err := strconv.Atoi(fromStr)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("invalid from"))
+		_, _ = w.Write([]byte("invalid from"))
 
 		return 0, 0, fmt.Errorf("invalid from: %w", err)
 	}
@@ -440,7 +440,7 @@ func pager(w http.ResponseWriter, r *http.Request) (int, int, error) {
 	to, err := strconv.Atoi(toStr)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("invalid to"))
+		_, _ = w.Write([]byte("invalid to"))
 
 		return 0, 0, fmt.Errorf("invalid to: %w", err)
 	}
@@ -459,7 +459,7 @@ func (h *hvor) future() http.Handler {
 		evs := events(s.calPage.Future, "future", from, to)
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(renderNodeList(evs)))
+		_, _ = w.Write([]byte(renderNodeList(evs)))
 	})
 }
 
@@ -474,7 +474,7 @@ func (h *hvor) past() http.Handler {
 		evs := events(s.calPage.Past, "past", from, to)
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(renderNodeList(evs)))
+		_, _ = w.Write([]byte(renderNodeList(evs)))
 	})
 }
 
