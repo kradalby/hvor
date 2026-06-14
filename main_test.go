@@ -434,7 +434,6 @@ func TestFetchCalendarParseError(t *testing.T) {
 // ============================================================
 
 func TestParseTokensEmpty(t *testing.T) {
-
 	toks := parseTokens("")
 	if toks.isValid("") {
 		t.Error("empty token should not be valid when no tokens are configured")
@@ -442,7 +441,6 @@ func TestParseTokensEmpty(t *testing.T) {
 }
 
 func TestCreatePageNilSummary(t *testing.T) {
-
 	cal := ics.NewCalendar()
 	now := time.Now()
 
@@ -463,7 +461,6 @@ func TestCreatePageNilSummary(t *testing.T) {
 }
 
 func TestEventsNegativeFrom(t *testing.T) {
-
 	es := makePageEvents(5)
 
 	// Should not panic — from should be clamped to 0.
@@ -474,7 +471,6 @@ func TestEventsNegativeFrom(t *testing.T) {
 }
 
 func TestEventsFromExceedsLen(t *testing.T) {
-
 	es := makePageEvents(3)
 
 	// Should not panic — should return empty or clamped result.
@@ -482,7 +478,6 @@ func TestEventsFromExceedsLen(t *testing.T) {
 }
 
 func TestEventsFromGreaterThanTo(t *testing.T) {
-
 	es := makePageEvents(10)
 
 	// Should not panic — should return empty or clamped result.
@@ -490,7 +485,6 @@ func TestEventsFromGreaterThanTo(t *testing.T) {
 }
 
 func TestPagerInvalidFromValidTo(t *testing.T) {
-
 	r := httptest.NewRequest("GET", "/?from=abc&to=5", nil)
 	w := httptest.NewRecorder()
 
@@ -505,7 +499,6 @@ func TestPagerInvalidFromValidTo(t *testing.T) {
 }
 
 func TestPagerBothInvalid(t *testing.T) {
-
 	r := httptest.NewRequest("GET", "/?from=abc&to=xyz", nil)
 	w := httptest.NewRecorder()
 
@@ -526,7 +519,6 @@ func TestPagerBothInvalid(t *testing.T) {
 }
 
 func TestFetchCalendarStatusCode(t *testing.T) {
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		// Return valid ICS so parsing succeeds if status isn't checked.
@@ -541,7 +533,6 @@ func TestFetchCalendarStatusCode(t *testing.T) {
 }
 
 func TestFetchCalendarBodyClosed(t *testing.T) {
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprint(w, validICS)
 	}))
