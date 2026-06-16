@@ -15,10 +15,12 @@ var (
 )
 
 func BasePage(props a.Props, children ...Node) *Element {
-	content := Html(a.Props{
-		a.Lang: "en",
-	},
-		Head(nil,
+	content := Html(
+		a.Props{
+			a.Lang: "en",
+		},
+		Head(
+			nil,
 			Meta(a.Props{
 				a.Charset: "utf-8",
 			}),
@@ -52,7 +54,8 @@ func BasePage(props a.Props, children ...Node) *Element {
 			}),
 			Script(a.Props{a.Src: "https://unpkg.com/htmx.org@1.9.10"}),
 		),
-		Body(props,
+		Body(
+			props,
 			children...,
 		),
 	)
@@ -69,7 +72,8 @@ func hvorPage(p *page, mapboxToken string, lastFetch time.Time) *Element {
 			a.Class: "mt-4 h-72",
 		})
 
-		mapScript = Script(nil, Text(fmt.Sprintf(`
+		mapScript = Script(nil, Text(fmt.Sprintf(
+			`
 mapboxgl.accessToken = '%s';
 
 let center = [%s, %s]
@@ -111,7 +115,8 @@ map.on('load', function() {
 		mapScript = nil
 	}
 
-	return BasePage(nil,
+	return BasePage(
+		nil,
 		Div(
 			a.Props{
 				a.Class: "w-full md:w-2/3 lg:w-1/2 mx-auto",
@@ -130,32 +135,39 @@ map.on('load', function() {
 							a.Props{
 								a.Class: "h-12 md:h-16 mr-4",
 								a.Src:   "./static/location.svg",
-							}),
+							},
+						),
 						H1(
 							a.Props{
 								a.Class: "text-3xl md:text-4xl text-gray-700 uppercase",
-							}, Text("Hvor")),
+							}, Text("Hvor"),
+						),
 					),
-				)),
+				),
+			),
 			Main(
 				a.Props{
 					a.Class: "px-4 py-6",
 				},
 				mapElement,
 				currentEvent(p.Current),
-				Div(nil,
+				Div(
+					nil,
 					H2(
 						a.Props{
 							a.Class: "text-2xl md:text-3xl text-gray-600 mt-12",
-						}, Text("Next")),
+						}, Text("Next"),
+					),
 					Div(nil,
 						events(p.Future, "future", 0, 5)...),
 				),
-				Div(nil,
+				Div(
+					nil,
 					H2(
 						a.Props{
 							a.Class: "text-2xl md:text-3xl text-gray-600 mt-12",
-						}, Text("Past")),
+						}, Text("Past"),
+					),
 					Div(nil, events(p.Past, "past", 0, 5)...),
 				),
 			),
@@ -163,7 +175,8 @@ map.on('load', function() {
 				a.Props{
 					a.Class: "px-4 py-6 text-sm text-gray-400",
 				},
-				Text(fmt.Sprintf("Last updated: %s", lastFetch.Format(dateTimeFormat)))),
+				Text(fmt.Sprintf("Last updated: %s", lastFetch.Format(dateTimeFormat))),
+			),
 			mapScript,
 		),
 	)
@@ -186,7 +199,8 @@ func event(pe pageEvent) *Element {
 			a.Props{
 				a.Class: "font-bold text-xl",
 			},
-			Text(pe.Summary)),
+			Text(pe.Summary),
+		),
 		Div(
 			a.Props{a.Class: "text-gray-700 mt-1"},
 			TransformEach(pe.Description, func(s string) Node {

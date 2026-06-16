@@ -488,12 +488,13 @@ func main() {
 
 	logger := log.New(os.Stdout, "hvor: ", log.LstdFlags)
 
-	k, err := web.NewServer(web.ServerConfig{
-		Hostname:        *hostname,
-		LocalAddr:       *localAddr,
-		AuthKeyPath:     *tailscaleKeyPath,
-		EnableTailscale: !*dev,
-	},
+	k, err := web.NewServer(
+		web.ServerConfig{
+			Hostname:        *hostname,
+			LocalAddr:       *localAddr,
+			AuthKeyPath:     *tailscaleKeyPath,
+			EnableTailscale: !*dev,
+		},
 		web.WithControlURL(*controlURL),
 		web.WithVerbose(*verbose),
 		web.WithStdLogger(logger),

@@ -38,7 +38,7 @@
                   ${pkgs.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
                 '';
 
-                vendorHash = "sha256-nafheze6sjDRap0Wqvo7aVtW8wYYXjMwYGbB2Hsf86c=";
+                vendorHash = "sha256-EDepL94RgmZqGgVs/zbWgLzuObMWLl2Y1VY/2zJoVRU=";
               })
             { };
         };
@@ -56,7 +56,7 @@
           root = ./.;
           pname = "hvor";
           version = hvorVersion;
-          vendorHash = "sha256-nafheze6sjDRap0Wqvo7aVtW8wYYXjMwYGbB2Hsf86c=";
+          vendorHash = "sha256-EDepL94RgmZqGgVs/zbWgLzuObMWLl2Y1VY/2zJoVRU=";
           goPkg = pkgs.go_1_26;
           embedDirs = [ (./. + "/static") ];
         };
