@@ -3,15 +3,16 @@
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixpkgs-unstable";
-    utils.url = "github:numtide/flake-utils";
+    flake-utils.url = "github:numtide/flake-utils";
     flake-checks.url = "github:kradalby/flake-checks";
     flake-checks.inputs.nixpkgs.follows = "nixpkgs";
+    flake-checks.inputs.flake-utils.follows = "flake-utils";
   };
 
   outputs =
     { self
     , nixpkgs
-    , utils
+    , flake-utils
     , flake-checks
     , ...
     }:
@@ -20,6 +21,7 @@
         if (self ? shortRev)
         then self.shortRev
         else "dev";
+      vendorHash = "sha256-EDepL94RgmZqGgVs/zbWgLzuObMWLl2Y1VY/2zJoVRU=";
     in
     {
       overlays.default = _: prev:
@@ -38,12 +40,12 @@
                   ${pkgs.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
                 '';
 
-                vendorHash = "sha256-EDepL94RgmZqGgVs/zbWgLzuObMWLl2Y1VY/2zJoVRU=";
+                inherit vendorHash;
               })
             { };
         };
     }
-    // utils.lib.eachDefaultSystem
+    // flake-utils.lib.eachDefaultSystem
       (system:
       let
         pkgs = import nixpkgs {
@@ -56,19 +58,21 @@
           root = ./.;
           pname = "hvor";
           version = hvorVersion;
-          vendorHash = "sha256-EDepL94RgmZqGgVs/zbWgLzuObMWLl2Y1VY/2zJoVRU=";
+          inherit vendorHash;
           goPkg = pkgs.go_1_26;
           embedDirs = [ (./. + "/static") ];
         };
         buildDeps = with pkgs; [
           git
-          gnumake
           go_1_26
         ];
         devDeps = with pkgs;
           buildDeps
           ++ [
             golangci-lint
+            gofumpt
+            gopls
+            prek
             entr
             tailwindcss
           ];
@@ -110,10 +114,10 @@
 
         # `nix run`
         apps = {
-          hvor = utils.lib.mkApp {
+          hvor = flake-utils.lib.mkApp {
             drv = pkgs.hvor;
           };
-          default = utils.lib.mkApp {
+          default = flake-utils.lib.mkApp {
             drv = pkgs.hvor;
           };
         };
