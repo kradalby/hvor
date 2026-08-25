@@ -10,39 +10,38 @@
   };
 
   outputs =
-    { self
-    , nixpkgs
-    , flake-utils
-    , flake-checks
-    , ...
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      flake-checks,
+      ...
     }:
     let
-      hvorVersion =
-        if (self ? shortRev)
-        then self.shortRev
-        else "dev";
+      hvorVersion = if (self ? shortRev) then self.shortRev else "dev";
       vendorHash = "sha256-z2sr7yteZV/9gBpBVWg0J24LGzDe56lWrEWpuVImdY8=";
     in
     {
-      overlays.default = _: prev:
+      overlays.default =
+        _: prev:
         let
           pkgs = nixpkgs.legacyPackages.${prev.stdenv.hostPlatform.system};
         in
         {
-          hvor = pkgs.callPackage
-            ({ buildGoLatestModule }:
-              buildGoLatestModule {
-                pname = "hvor";
-                version = hvorVersion;
-                src = pkgs.nix-gitignore.gitignoreSource [ ] ./.;
+          hvor = pkgs.callPackage (
+            { buildGoLatestModule }:
+            buildGoLatestModule {
+              pname = "hvor";
+              version = hvorVersion;
+              src = pkgs.nix-gitignore.gitignoreSource [ ] ./.;
 
-                patchPhase = ''
-                  ${pkgs.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
-                '';
+              patchPhase = ''
+                ${pkgs.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
+              '';
 
-                inherit vendorHash;
-              })
-            { };
+              inherit vendorHash;
+            }
+          ) { };
 
           # gofumpt and goimports (gotools) ship wrapped with the `go` they were
           # built against. That `go` must be at least the go.mod directive, or
@@ -56,8 +55,8 @@
           };
         };
     }
-    // flake-utils.lib.eachDefaultSystem
-      (system:
+    // flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = import nixpkgs {
           overlays = [ self.overlays.default ];
@@ -77,7 +76,8 @@
           git
           go_latest
         ];
-        devDeps = with pkgs;
+        devDeps =
+          with pkgs;
           buildDeps
           ++ [
             golangci-lint
@@ -91,19 +91,16 @@
       {
         # `nix develop`
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs;
+          buildInputs =
+            with pkgs;
             [
-              (writeShellScriptBin
-                "hvorrun"
-                ''
-                  tailwindcss --input ./input.css --output ./static/tailwind.css
-                  go run . --from-tokens "dev" --verbose
-                '')
-              (writeShellScriptBin
-                "hvordev"
-                ''
-                  ls *.go | entr -r hvorrun
-                '')
+              (writeShellScriptBin "hvorrun" ''
+                tailwindcss --input ./input.css --output ./static/tailwind.css
+                go run . --from-tokens "dev" --verbose
+              '')
+              (writeShellScriptBin "hvordev" ''
+                ls *.go | entr -r hvorrun
+              '')
             ]
             ++ devDeps;
         };
@@ -132,13 +129,15 @@
             drv = pkgs.hvor;
           };
         };
-      })
+      }
+    )
     // {
       nixosModules.default =
-        { pkgs
-        , lib
-        , config
-        , ...
+        {
+          pkgs,
+          lib,
+          config,
+          ...
         }:
         let
           cfg = config.services.hvor;
@@ -200,12 +199,11 @@
               enable = true;
               script =
                 let
-                  args =
-                    [
-                      "--ts-key-path ${cfg.tailscaleKeyPath}"
-                      "--listen-addr localhost:${toString cfg.localhostPort}"
-                    ]
-                    ++ lib.optionals cfg.verbose [ "--verbose" ];
+                  args = [
+                    "--ts-key-path ${cfg.tailscaleKeyPath}"
+                    "--listen-addr localhost:${toString cfg.localhostPort}"
+                  ]
+                  ++ lib.optionals cfg.verbose [ "--verbose" ];
                 in
                 ''
                   ${cfg.package}/bin/hvor ${lib.concatStringsSep " " args}
