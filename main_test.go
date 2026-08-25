@@ -398,10 +398,10 @@ func TestEventsEmptySlice(t *testing.T) {
 }
 
 func TestFetchCalendarValid(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	ts := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprint(w, validICS)
 	}))
-	defer ts.Close()
+	ts.Start()
 
 	cal, err := fetchCalendar(ts.URL)
 	if err != nil {
@@ -418,10 +418,10 @@ func TestFetchCalendarValid(t *testing.T) {
 }
 
 func TestFetchCalendarParseError(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	ts := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprint(w, "this is not valid ical data")
 	}))
-	defer ts.Close()
+	ts.Start()
 
 	_, err := fetchCalendar(ts.URL)
 	if err == nil {
@@ -519,12 +519,12 @@ func TestPagerBothInvalid(t *testing.T) {
 }
 
 func TestFetchCalendarStatusCode(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	ts := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		// Return valid ICS so parsing succeeds if status isn't checked.
 		_, _ = fmt.Fprint(w, "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n")
 	}))
-	defer ts.Close()
+	ts.Start()
 
 	_, err := fetchCalendar(ts.URL)
 	if err == nil {
@@ -533,10 +533,10 @@ func TestFetchCalendarStatusCode(t *testing.T) {
 }
 
 func TestFetchCalendarBodyClosed(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	ts := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprint(w, validICS)
 	}))
-	defer ts.Close()
+	ts.Start()
 
 	tracker := &trackingTransport{base: http.DefaultTransport}
 	origTransport := httpClient.Transport
