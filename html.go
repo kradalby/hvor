@@ -219,17 +219,11 @@ func event(pe pageEvent) *Element {
 }
 
 func events(es pageEvents, typ string, from, to int) []Node {
-	if from < 0 {
-		from = 0
-	}
-
-	if to > len(es) {
-		to = len(es)
-	}
-
-	if from > to {
-		from = to
-	}
+	// Both bounds arrive straight from user-supplied query parameters, so
+	// clamp into [0, len(es)] before slicing: a negative `to` used to slip
+	// past the checks and panic on es[from:to].
+	to = min(max(to, 0), len(es))
+	from = min(max(from, 0), to)
 
 	events := TransformEach(es[from:to], func(pe pageEvent) Node {
 		return event(pe)

@@ -484,6 +484,24 @@ func TestEventsFromGreaterThanTo(t *testing.T) {
 	_ = events(es, "future", 7, 5)
 }
 
+func TestEventsNegativeTo(t *testing.T) {
+	es := makePageEvents(5)
+
+	// `to` comes from a user-supplied query parameter and may be negative
+	// (strconv.Atoi accepts "-1"), which used to panic on es[from:to].
+	result := events(es, "future", 0, -1)
+	if result == nil {
+		t.Error("expected non-nil result")
+	}
+}
+
+func TestEventsBothNegative(t *testing.T) {
+	es := makePageEvents(5)
+
+	// Should not panic — both bounds clamp to 0.
+	_ = events(es, "past", -3, -1)
+}
+
 func TestPagerInvalidFromValidTo(t *testing.T) {
 	r := httptest.NewRequest("GET", "/?from=abc&to=5", nil)
 	w := httptest.NewRecorder()
