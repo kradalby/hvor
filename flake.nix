@@ -21,7 +21,7 @@
         if (self ? shortRev)
         then self.shortRev
         else "dev";
-      vendorHash = "sha256-EDepL94RgmZqGgVs/zbWgLzuObMWLl2Y1VY/2zJoVRU=";
+      vendorHash = "sha256-z2sr7yteZV/9gBpBVWg0J24LGzDe56lWrEWpuVImdY8=";
     in
     {
       overlays.default = _: prev:
@@ -30,8 +30,8 @@
         in
         {
           hvor = pkgs.callPackage
-            ({ buildGo126Module }:
-              buildGo126Module {
+            ({ buildGoLatestModule }:
+              buildGoLatestModule {
                 pname = "hvor";
                 version = hvorVersion;
                 src = pkgs.nix-gitignore.gitignoreSource [ ] ./.;
@@ -43,6 +43,17 @@
                 inherit vendorHash;
               })
             { };
+
+          # gofumpt and goimports (gotools) ship wrapped with the `go` they were
+          # built against. That `go` must be at least the go.mod directive, or
+          # GOTOOLCHAIN=auto tries to fetch a toolchain from inside the
+          # network-less treefmt sandbox. golangci-lint and gopls already track
+          # the latest Go upstream, so they need no override.
+          gofumpt = prev.gofumpt.override { buildGoModule = pkgs.buildGoLatestModule; };
+          gotools = prev.gotools.override {
+            buildGoModule = pkgs.buildGoLatestModule;
+            go = pkgs.go_latest;
+          };
         };
     }
     // flake-utils.lib.eachDefaultSystem
@@ -59,12 +70,12 @@
           pname = "hvor";
           version = hvorVersion;
           inherit vendorHash;
-          goPkg = pkgs.go_1_26;
+          goPkg = pkgs.go_latest;
           embedDirs = [ (./. + "/static") ];
         };
         buildDeps = with pkgs; [
           git
-          go_1_26
+          go_latest
         ];
         devDeps = with pkgs;
           buildDeps
