@@ -12,7 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -135,18 +135,6 @@ func fetchCalendar(url string) (*ics.Calendar, error) {
 }
 
 type pageEvents []pageEvent
-
-func (u pageEvents) Len() int {
-	return len(u)
-}
-
-func (u pageEvents) Swap(i, j int) {
-	u[i], u[j] = u[j], u[i]
-}
-
-func (u pageEvents) Less(i, j int) bool {
-	return u[i].To.Before(u[j].To)
-}
 
 type pageEvent struct {
 	From        time.Time
@@ -304,8 +292,9 @@ func createPage(cal *ics.Calendar, logf logger.Logf) (*page, error) {
 		p.Current = &pe
 	}
 
-	sort.Sort(sort.Reverse(p.Past))
-	sort.Sort(p.Future)
+	// Past reads most-recent-first, Future soonest-first.
+	slices.SortFunc(p.Past, func(a, b pageEvent) int { return b.To.Compare(a.To) })
+	slices.SortFunc(p.Future, func(a, b pageEvent) int { return a.To.Compare(b.To) })
 
 	return &p, nil
 }
@@ -327,13 +316,7 @@ func parseTokens(str string) tokens {
 }
 
 func (t *tokens) isValid(token string) bool {
-	for _, tok := range t.ts {
-		if tok == token {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(t.ts, token)
 }
 
 // snapshot bundles the calendar page and fetch time for atomic swapping.

@@ -585,11 +585,7 @@ func TestHvorConcurrentAccess(t *testing.T) {
 	var wg sync.WaitGroup
 
 	// Writer goroutine (simulates the background updater).
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-
+	wg.Go(func() {
 		for range 100 {
 			newPage := &page{
 				Past:   make(pageEvents, 0),
@@ -597,15 +593,11 @@ func TestHvorConcurrentAccess(t *testing.T) {
 			}
 			h.snap.Store(&snapshot{calPage: newPage, lastFetch: time.Now()})
 		}
-	}()
+	})
 
 	// Reader goroutines (simulate concurrent HTTP handlers).
 	for range 10 {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			for range 100 {
 				s := h.snap.Load()
 				if s != nil {
@@ -618,7 +610,7 @@ func TestHvorConcurrentAccess(t *testing.T) {
 					}
 				}
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
