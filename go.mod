@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/arran4/golang-ical v0.3.6
 	github.com/chasefleming/elem-go v0.36.0
-	github.com/kradalby/kra v0.0.0-20260825155642-44bd77913307
+	github.com/kradalby/kra v0.0.0-20260825193819-f96ca865dd41
 	tailscale.com v1.102.3
 )
 
