@@ -64,7 +64,10 @@ func BasePage(props a.Props, children ...Node) *Element {
 }
 
 func hvorPage(p *page, mapboxToken string, lastFetch time.Time) *Element {
-	var mapElement, mapScript *Element
+	var mapElement *Element
+
+	// A nil *Element child panics in Render; None renders nothing.
+	var mapScript Node = None()
 
 	if p.Current != nil && p.Current.Location != nil {
 		mapElement = Div(a.Props{
@@ -112,7 +115,6 @@ map.on('load', function() {
 				Text("Unknown whereabouts"),
 			),
 		)
-		mapScript = nil
 	}
 
 	return BasePage(

@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -380,6 +381,13 @@ func TestEventsClampTo(t *testing.T) {
 	result := events(es, "future", 0, 999)
 	if len(result) < 3 {
 		t.Errorf("expected at least 3 results, got %d", len(result))
+	}
+}
+
+func TestHvorPageUnknownLocation(t *testing.T) {
+	out := hvorPage(&page{}, "token", time.Now()).Render()
+	if !strings.Contains(out, "Unknown whereabouts") {
+		t.Error("expected unknown whereabouts placeholder")
 	}
 }
 
