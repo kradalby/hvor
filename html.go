@@ -39,20 +39,20 @@ func BasePage(props a.Props, children ...Node) *Element {
 			}),
 			Link(a.Props{
 				a.Rel:  "stylesheet",
-				a.Href: "https://api.mapbox.com/mapbox-gl-js/v3.0.0-beta.1/mapbox-gl.css",
+				a.Href: "https://api.mapbox.com/mapbox-gl-js/v3.31.0/mapbox-gl.css",
 			}),
 			Script(a.Props{
-				a.Src: "https://api.mapbox.com/mapbox-gl-js/v3.0.0-beta.1/mapbox-gl.js",
+				a.Src: "https://api.mapbox.com/mapbox-gl-js/v3.31.0/mapbox-gl.js",
 			}),
 			Script(a.Props{
-				a.Src: "https://unpkg.com/@turf/turf@6/turf.min.js",
+				a.Src: "https://unpkg.com/@turf/turf@7/turf.min.js",
 			}),
 			Script(a.Props{
 				a.Src:             "https://umami.kradalby.no/script.js",
 				a.Async:           "true",
 				"data-website-id": "0de65a1e-5275-4e39-a78e-364e704c0867",
 			}),
-			Script(a.Props{a.Src: "https://unpkg.com/htmx.org@1.9.10"}),
+			Script(a.Props{a.Src: "https://unpkg.com/htmx.org@2.0.11"}),
 		),
 		Body(
 			props,
