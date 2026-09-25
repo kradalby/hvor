@@ -55,7 +55,9 @@
           };
         };
     }
-    // flake-utils.lib.eachDefaultSystem (
+    # eachDefaultSystem still lists x86_64-darwin, which nixpkgs 26.11 dropped:
+    # evaluating any output for it throws.
+    // flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ] (
       system:
       let
         pkgs = import nixpkgs {
@@ -121,14 +123,17 @@
         };
 
         # `nix run`
-        apps = {
-          hvor = flake-utils.lib.mkApp {
-            drv = pkgs.hvor;
+        apps =
+          let
+            # mkApp drops meta, and `nix flake check` warns on apps without it.
+            hvor = flake-utils.lib.mkApp { drv = pkgs.hvor; } // {
+              meta.description = "Run the hvor web server";
+            };
+          in
+          {
+            inherit hvor;
+            default = hvor;
           };
-          default = flake-utils.lib.mkApp {
-            drv = pkgs.hvor;
-          };
-        };
       }
     )
     // {
