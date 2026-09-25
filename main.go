@@ -21,7 +21,7 @@ import (
 
 	ics "github.com/arran4/golang-ical"
 	"github.com/kradalby/kra/web"
-	"tailscale.com/client/tailscale" //nolint:staticcheck // SA1019: deprecated, pending migration to client/tailscale/v2
+	"tailscale.com/client/local"
 	"tailscale.com/types/logger"
 )
 
@@ -330,7 +330,7 @@ type hvor struct {
 	tokens      tokens
 	snap        atomic.Pointer[snapshot]
 	mapboxToken string
-	tsLocal     *tailscale.LocalClient //nolint:staticcheck // SA1019: deprecated, pending migration to client/tailscale/v2
+	tsLocal     *local.Client
 	logf        logger.Logf
 }
 
