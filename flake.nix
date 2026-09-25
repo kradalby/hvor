@@ -36,7 +36,7 @@
               src = pkgs.nix-gitignore.gitignoreSource [ ] ./.;
 
               patchPhase = ''
-                ${pkgs.tailwindcss}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
+                ${pkgs.tailwindcss_4}/bin/tailwindcss --input ./input.css --output ./static/tailwind.css
               '';
 
               inherit vendorHash;
@@ -87,7 +87,7 @@
             gopls
             prek
             entr
-            tailwindcss
+            tailwindcss_4
           ];
       in
       {
