@@ -25,10 +25,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Nix
-        uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # main
+        uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1.0.0
 
       - name: Setup Nix cache (hestia)
-        uses: Mic92/hestia/action@e9aef9254de78caa79ed215d028c290f19801adb # main
+        uses: Mic92/hestia@dfed9ced335d28978ba74e513939a10db1f71025 # v3.1.0
 
       - name: build
         run: nix build -L .#checks.x86_64-linux.build
@@ -40,10 +40,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Nix
-        uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # main
+        uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1.0.0
 
       - name: Setup Nix cache (hestia)
-        uses: Mic92/hestia/action@e9aef9254de78caa79ed215d028c290f19801adb # main
+        uses: Mic92/hestia@dfed9ced335d28978ba74e513939a10db1f71025 # v3.1.0
 
       - name: gotest
         run: nix build -L .#checks.x86_64-linux.gotest
@@ -55,10 +55,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Nix
-        uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # main
+        uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1.0.0
 
       - name: Setup Nix cache (hestia)
-        uses: Mic92/hestia/action@e9aef9254de78caa79ed215d028c290f19801adb # main
+        uses: Mic92/hestia@dfed9ced335d28978ba74e513939a10db1f71025 # v3.1.0
 
       - name: golangci-lint
         run: nix build -L .#checks.x86_64-linux.golangci-lint
@@ -70,10 +70,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Nix
-        uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # main
+        uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1.0.0
 
       - name: Setup Nix cache (hestia)
-        uses: Mic92/hestia/action@e9aef9254de78caa79ed215d028c290f19801adb # main
+        uses: Mic92/hestia@dfed9ced335d28978ba74e513939a10db1f71025 # v3.1.0
 
       - name: formatting
         run: nix build -L .#checks.x86_64-linux.formatting
