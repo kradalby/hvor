@@ -19,7 +19,7 @@
     }:
     let
       hvorVersion = if (self ? shortRev) then self.shortRev else "dev";
-      vendorHash = "sha256-/MoIJLUCENzVOL/PMK5nWwq1VfY/Sr5tXuFV+QOp0Ys=";
+      vendorHash = "sha256-mMSOULeVth8K5sv+eXsaXP+lrDz60chf8HMFSCM6eqE=";
     in
     {
       overlays.default =
